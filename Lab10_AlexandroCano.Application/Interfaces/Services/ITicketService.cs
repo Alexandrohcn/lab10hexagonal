@@ -2,7 +2,7 @@
 
 namespace Lab10_AlexandroCano.Application.Interfaces.Services;
 
-public interface TicketService
+public interface ITicketService
 {
     Task<IEnumerable<TicketDto>> GetAllAsync();
 

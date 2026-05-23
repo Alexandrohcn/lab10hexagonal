@@ -6,7 +6,6 @@ using Lab10_AlexandroCano.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using TicketService = Lab10_AlexandroCano.Application.Interfaces.Services.TicketService;
 
 namespace Lab10_AlexandroCano.Api.Configuration;
 
@@ -23,7 +22,7 @@ public static class ApiServicesExtensions
             });
 
         services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<TicketService, Application.Services.TicketService>();
+        services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<IResponseService, ResponseService>();
 
         services.AddInfrastructureServices(configuration);

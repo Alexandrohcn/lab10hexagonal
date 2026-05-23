@@ -10,9 +10,9 @@ namespace Lab10_AlexandroCano.Api.Controllers;
 [Authorize]
 public class TicketsController : ControllerBase
 {
-    private readonly TicketService _ticketService;
+    private readonly ITicketService _ticketService;
 
-    public TicketsController(TicketService ticketService)
+    public TicketsController(ITicketService ticketService)
     {
         _ticketService = ticketService;
     }
