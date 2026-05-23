@@ -1,84 +1,22 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Lab10_AlexandroCano.Application.DTOs;
-using Lab10_AlexandroCano.Application.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-
-namespace Lab10_AlexandroCano.Api.Controllers;
-
-[ApiController]
+﻿[ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IConfiguration _configuration;
+    private readonly IAuthService _authService;
 
-    public AuthController(IUnitOfWork unitOfWork, IConfiguration configuration)
+    public AuthController(IAuthService authService)
     {
-        _unitOfWork = unitOfWork;
-        _configuration = configuration;
+        _authService = authService;
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginDto loginDto)
+    public async Task<IActionResult> Login(LoginRequestDto request)
     {
-        var user = await _unitOfWork.Users.GetByUsernameWithRolesAsync(loginDto.Username);
+        var response = await _authService.LoginAsync(request);
 
-        if (user is null || user.PasswordHash != loginDto.Password)
-        {
-            return Unauthorized(new
-            {
-                Message = "Credenciales incorrectas"
-            });
-        }
+        if (response == null)
+            return Unauthorized(new { Message = "Credenciales incorrectas" });
 
-        var roles = user.UserRoles
-            .Select(ur => ur.Role?.RoleName)
-            .Where(role => role is not null)
-            .Select(role => role!)
-            .ToList();
-
-        var token = GenerateJwtToken(user.Username, user.UserId, roles);
-
-        return Ok(new
-        {
-            Message = "Login correcto",
-            UserId = user.UserId,
-            Username = user.Username,
-            Roles = roles,
-            Token = token
-        });
-    }
-
-    private string GenerateJwtToken(string username, Guid userId, List<string> roles)
-    {
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Name, username)
-        };
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-
-        var credentials = new SigningCredentials(
-            key,
-            SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddHours(2),
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return Ok(response);
     }
 }
