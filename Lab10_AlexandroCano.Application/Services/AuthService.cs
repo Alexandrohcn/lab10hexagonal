@@ -1,38 +1,50 @@
 ﻿using Lab10_AlexandroCano.Application.DTOs.Auth;
-using Lab10_AlexandroCano.Application.Interfaces.Repositories;
+using Lab10_AlexandroCano.Application.Interfaces;
 using Lab10_AlexandroCano.Application.Interfaces.Services;
 
 namespace Lab10_AlexandroCano.Application.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ITokenService _tokenService;
 
     public AuthService(
-        IUserRepository userRepository,
+        IUnitOfWork unitOfWork,
         ITokenService tokenService)
     {
-        _userRepository = userRepository;
+        _unitOfWork = unitOfWork;
         _tokenService = tokenService;
     }
 
-    public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
+    public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto loginDto)
     {
-        var user = await _userRepository.GetByUsernameAsync(request.Username);
+        var user = await _unitOfWork.Users
+            .GetByUsernameWithRolesAsync(loginDto.Username);
 
-        if (user == null)
+        if (user is null)
+        {
             return null;
+        }
 
-        if (user.Password != request.Password)
+        if (user.PasswordHash != loginDto.Password)
+        {
             return null;
+        }
 
-        var token = _tokenService.GenerateToken(user);
+        var roles = user.UserRoles
+            .Select(ur => ur.Role.RoleName)
+            .Where(role => !string.IsNullOrWhiteSpace(role))
+            .ToList();
+
+        var token = _tokenService.GenerateToken(user, roles);
 
         return new LoginResponseDto
         {
+            Message = "Login correcto",
+            UserId = user.UserId,
             Username = user.Username,
-            Role = user.Role,
+            Roles = roles,
             Token = token
         };
     }

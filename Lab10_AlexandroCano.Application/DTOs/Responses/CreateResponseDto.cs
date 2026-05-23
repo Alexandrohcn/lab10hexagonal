@@ -1,4 +1,4 @@
-﻿namespace Lab10_AlexandroCano.Application.DTOs;
+﻿namespace Lab10_AlexandroCano.Application.DTOs.Responses;
 
 public class CreateResponseDto
 {

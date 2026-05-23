@@ -4,5 +4,5 @@ namespace Lab10_AlexandroCano.Application.Interfaces.Services;
 
 public interface ITokenService
 {
-    string GenerateToken(User user);
+    string GenerateToken(User user, IEnumerable<string> roles);
 }

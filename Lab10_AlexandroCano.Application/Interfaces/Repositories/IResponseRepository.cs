@@ -1,6 +1,8 @@
-﻿namespace Lab10_AlexandroCano.Application.Interfaces;
+﻿using Lab10_AlexandroCano.Domain.Entities;
 
-public class IResponseRepository
+namespace Lab10_AlexandroCano.Application.Interfaces.Repositories;
+
+public interface IResponseRepository : IGenericRepository<Response>
 {
-    
+    Task<IEnumerable<Response>> GetByTicketIdAsync(Guid ticketId);
 }

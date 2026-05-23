@@ -1,4 +1,5 @@
-﻿using Lab10_AlexandroCano.Domain.Entities;
+﻿using Lab10_AlexandroCano.Application.Interfaces.Repositories;
+using Lab10_AlexandroCano.Domain.Entities;
 
 namespace Lab10_AlexandroCano.Application.Interfaces;
 
@@ -8,9 +9,9 @@ public interface IUnitOfWork
 
     IGenericRepository<Role> Roles { get; }
 
-    IGenericRepository<Ticket> Tickets { get; }
+    ITicketRepository Tickets { get; }
 
-    IGenericRepository<Response> Responses { get; }
+    IResponseRepository Responses { get; }
 
     Task<int> SaveChangesAsync();
 }

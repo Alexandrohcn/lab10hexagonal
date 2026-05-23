@@ -1,4 +1,4 @@
-﻿namespace Lab10_AlexandroCano.Application.Interfaces;
+﻿namespace Lab10_AlexandroCano.Application.Interfaces.Repositories;
 
 public interface IGenericRepository<T> where T : class
 {
@@ -12,5 +12,3 @@ public interface IGenericRepository<T> where T : class
 
     void Delete(T entity);
 }
-
-//las interfaces deben de estar en dominio no en aplicattion

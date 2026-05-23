@@ -1,6 +1,5 @@
-﻿using Lab10_AlexandroCano.Application.DTOs;
-using Lab10_AlexandroCano.Application.Interfaces;
-using Lab10_AlexandroCano.Domain.Entities;
+﻿using Lab10_AlexandroCano.Application.DTOs.Responses;
+using Lab10_AlexandroCano.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,17 +10,17 @@ namespace Lab10_AlexandroCano.Api.Controllers;
 [Authorize]
 public class ResponsesController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IResponseService _responseService;
 
-    public ResponsesController(IUnitOfWork unitOfWork)
+    public ResponsesController(IResponseService responseService)
     {
-        _unitOfWork = unitOfWork;
+        _responseService = responseService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var responses = await _unitOfWork.Responses.GetAllAsync();
+        var responses = await _responseService.GetAllAsync();
 
         return Ok(responses);
     }
@@ -29,7 +28,7 @@ public class ResponsesController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var response = await _unitOfWork.Responses.GetByIdAsync(id);
+        var response = await _responseService.GetByIdAsync(id);
 
         if (response is null)
         {
@@ -45,30 +44,16 @@ public class ResponsesController : ControllerBase
     [HttpGet("ticket/{ticketId:guid}")]
     public async Task<IActionResult> GetByTicket(Guid ticketId)
     {
-        var responses = await _unitOfWork.Responses.GetAllAsync();
+        var responses = await _responseService.GetByTicketIdAsync(ticketId);
 
-        var filteredResponses = responses
-            .Where(r => r.TicketId == ticketId)
-            .ToList();
-
-        return Ok(filteredResponses);
+        return Ok(responses);
     }
 
     [HttpPost]
     [Authorize(Roles = "Admin,Support")]
     public async Task<IActionResult> Create(CreateResponseDto dto)
     {
-        var response = new Response
-        {
-            ResponseId = Guid.NewGuid(),
-            TicketId = dto.TicketId,
-            ResponderId = dto.ResponderId,
-            Message = dto.Message,
-            CreatedAt = DateTime.Now
-        };
-
-        await _unitOfWork.Responses.AddAsync(response);
-        await _unitOfWork.SaveChangesAsync();
+        var response = await _responseService.CreateAsync(dto);
 
         return Ok(new
         {

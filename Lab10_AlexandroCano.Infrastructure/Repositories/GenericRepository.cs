@@ -1,4 +1,4 @@
-﻿using Lab10_AlexandroCano.Application.Interfaces;
+﻿using Lab10_AlexandroCano.Application.Interfaces.Repositories;
 using Lab10_AlexandroCano.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 

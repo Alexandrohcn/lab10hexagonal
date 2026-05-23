@@ -1,10 +1,12 @@
-﻿using System.Text.Json.Serialization;
-using System.Text;
+﻿using System.Text;
+using System.Text.Json.Serialization;
+using Lab10_AlexandroCano.Application.Interfaces.Services;
+using Lab10_AlexandroCano.Application.Services;
 using Lab10_AlexandroCano.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using TicketService = Lab10_AlexandroCano.Application.Interfaces.Services.TicketService;
 
 namespace Lab10_AlexandroCano.Api.Configuration;
 
@@ -19,6 +21,10 @@ public static class ApiServicesExtensions
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
+
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<TicketService, Application.Services.TicketService>();
+        services.AddScoped<IResponseService, ResponseService>();
 
         services.AddInfrastructureServices(configuration);
 
@@ -42,9 +48,12 @@ public static class ApiServicesExtensions
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
+
                 ValidIssuer = configuration["Jwt:Issuer"],
                 ValidAudience = configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(key))
             };
         });
 
@@ -58,7 +67,7 @@ public static class ApiServicesExtensions
             {
                 Title = "Lab10 Ticketera API",
                 Version = "v1",
-                Description = "API desarrollada con arquitectura limpia, JWT, Repository y UnitOfWork."
+                Description = "API desarrollada con arquitectura hexagonal, JWT, Repository, UnitOfWork y LINQ."
             });
 
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

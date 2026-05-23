@@ -17,35 +17,48 @@ public class JwtTokenService : ITokenService
         _configuration = configuration;
     }
 
-    public string GenerateToken(User user)
+    public string GenerateToken(User user, IEnumerable<string> roles)
     {
         var key = _configuration["Jwt:Key"];
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new InvalidOperationException("La clave JWT no está configurada.");
+        }
+
         var issuer = _configuration["Jwt:Issuer"];
         var audience = _configuration["Jwt:Audience"];
 
+        var expirationText = _configuration["Jwt:ExpirationMinutes"];
+
+        var expirationMinutes = int.TryParse(expirationText, out var minutes)
+            ? minutes
+            : 120;
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new Claim(ClaimTypes.Name, user.Username)
+        };
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
         var securityKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(key!)
-        );
+            Encoding.UTF8.GetBytes(key));
 
         var credentials = new SigningCredentials(
             securityKey,
-            SecurityAlgorithms.HmacSha256
-        );
-
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
-        };
+            SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.Now.AddHours(1),
-            signingCredentials: credentials
-        );
+            expires: DateTime.Now.AddMinutes(expirationMinutes),
+            signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }

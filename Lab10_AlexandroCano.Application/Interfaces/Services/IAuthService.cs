@@ -4,5 +4,5 @@ namespace Lab10_AlexandroCano.Application.Interfaces.Services;
 
 public interface IAuthService
 {
-    Task<LoginResponseDto?> LoginAsync(LoginRequestDto request);
+    Task<LoginResponseDto?> LoginAsync(LoginRequestDto loginDto);
 }

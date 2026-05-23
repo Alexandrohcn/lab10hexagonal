@@ -1,6 +1,5 @@
-﻿using Lab10_AlexandroCano.Application.DTOs;
-using Lab10_AlexandroCano.Application.Interfaces;
-using Lab10_AlexandroCano.Domain.Entities;
+﻿using Lab10_AlexandroCano.Application.DTOs.Tickets;
+using Lab10_AlexandroCano.Application.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,17 +10,17 @@ namespace Lab10_AlexandroCano.Api.Controllers;
 [Authorize]
 public class TicketsController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly TicketService _ticketService;
 
-    public TicketsController(IUnitOfWork unitOfWork)
+    public TicketsController(TicketService ticketService)
     {
-        _unitOfWork = unitOfWork;
+        _ticketService = ticketService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var tickets = await _unitOfWork.Tickets.GetAllAsync();
+        var tickets = await _ticketService.GetAllAsync();
 
         return Ok(tickets);
     }
@@ -29,7 +28,7 @@ public class TicketsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
+        var ticket = await _ticketService.GetByIdAsync(id);
 
         if (ticket is null)
         {
@@ -45,18 +44,7 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateTicketDto dto)
     {
-        var ticket = new Ticket
-        {
-            TicketId = Guid.NewGuid(),
-            UserId = dto.UserId,
-            Title = dto.Title,
-            Description = dto.Description,
-            Status = "abierto",
-            CreatedAt = DateTime.Now
-        };
-
-        await _unitOfWork.Tickets.AddAsync(ticket);
-        await _unitOfWork.SaveChangesAsync();
+        var ticket = await _ticketService.CreateAsync(dto);
 
         return Ok(new
         {
@@ -67,38 +55,32 @@ public class TicketsController : ControllerBase
 
     [HttpPut("{id:guid}/status")]
     [Authorize(Roles = "Admin,Support")]
-    public async Task<IActionResult> UpdateStatus(Guid id, UpdateTicketStatusDto dto)
+    public async Task<IActionResult> UpdateStatus(
+        Guid id,
+        UpdateTicketStatusDto dto)
     {
-        var validStatuses = new[] { "abierto", "en_proceso", "cerrado" };
+        var result = await _ticketService.UpdateStatusAsync(id, dto);
 
-        if (!validStatuses.Contains(dto.Status))
+        if (!result.Success)
         {
+            if (result.Error == "Ticket no encontrado.")
+            {
+                return NotFound(new
+                {
+                    Message = result.Error
+                });
+            }
+
             return BadRequest(new
             {
-                Message = "Estado no válido. Use: abierto, en_proceso o cerrado."
+                Message = result.Error
             });
         }
-
-        var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-
-        if (ticket is null)
-        {
-            return NotFound(new
-            {
-                Message = "Ticket no encontrado"
-            });
-        }
-
-        ticket.Status = dto.Status;
-        ticket.ClosedAt = dto.Status == "cerrado" ? DateTime.Now : null;
-
-        _unitOfWork.Tickets.Update(ticket);
-        await _unitOfWork.SaveChangesAsync();
 
         return Ok(new
         {
             Message = "Estado del ticket actualizado correctamente",
-            Ticket = ticket
+            Ticket = result.Ticket
         });
     }
 
@@ -106,18 +88,15 @@ public class TicketsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
+        var deleted = await _ticketService.DeleteAsync(id);
 
-        if (ticket is null)
+        if (!deleted)
         {
             return NotFound(new
             {
                 Message = "Ticket no encontrado"
             });
         }
-
-        _unitOfWork.Tickets.Delete(ticket);
-        await _unitOfWork.SaveChangesAsync();
 
         return Ok(new
         {
