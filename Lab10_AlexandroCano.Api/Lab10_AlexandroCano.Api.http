@@ -1,0 +1,6 @@
+@Lab10_AlexandroCano.Api_HostAddress = http://localhost:5048
+
+GET {{Lab10_AlexandroCano.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
