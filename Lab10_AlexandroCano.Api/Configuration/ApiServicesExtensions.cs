@@ -1,7 +1,6 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json.Serialization;
-using Lab10_AlexandroCano.Application.Interfaces.Services;
-using Lab10_AlexandroCano.Application.Services;
+using Lab10_AlexandroCano.Application.Configuration;
 using Lab10_AlexandroCano.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -21,10 +20,7 @@ public static class ApiServicesExtensions
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
 
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<ITicketService, TicketService>();
-        services.AddScoped<IResponseService, ResponseService>();
-
+        services.AddApplicationServices();
         services.AddInfrastructureServices(configuration);
 
         services.AddAuthentication(options =>

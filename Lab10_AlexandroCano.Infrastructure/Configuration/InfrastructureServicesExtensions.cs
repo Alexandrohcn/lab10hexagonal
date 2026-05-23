@@ -1,7 +1,7 @@
-﻿using Lab10_AlexandroCano.Application.Interfaces;
-using Lab10_AlexandroCano.Application.Interfaces.Services;
+using Lab10_AlexandroCano.Application.Interfaces.Security;
+using Lab10_AlexandroCano.Application.Interfaces.UnitOfWork;
 using Lab10_AlexandroCano.Infrastructure.Persistence;
-using Lab10_AlexandroCano.Infrastructure.Services;
+using Lab10_AlexandroCano.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,8 +20,7 @@ public static class InfrastructureServicesExtensions
                 configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IUnitOfWork, UnitOfWorkImplementation>();
-
-        services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         return services;
     }

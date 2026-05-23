@@ -1,14 +1,14 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Lab10_AlexandroCano.Application.Interfaces.Services;
+using Lab10_AlexandroCano.Application.Interfaces.Security;
 using Lab10_AlexandroCano.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Lab10_AlexandroCano.Infrastructure.Services;
+namespace Lab10_AlexandroCano.Infrastructure.Security;
 
-public class JwtTokenService : ITokenService
+public class JwtTokenService : IJwtTokenService
 {
     private readonly IConfiguration _configuration;
 

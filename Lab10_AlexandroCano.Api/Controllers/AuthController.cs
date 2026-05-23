@@ -1,5 +1,5 @@
-﻿using Lab10_AlexandroCano.Application.DTOs.Auth;
-using Lab10_AlexandroCano.Application.Interfaces.Services;
+using Lab10_AlexandroCano.Application.DTOs.Auth;
+using Lab10_AlexandroCano.Application.UseCases.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,27 +9,27 @@ namespace Lab10_AlexandroCano.Api.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IAuthService _authService;
+    private readonly LoginUseCase _loginUseCase;
 
-    public AuthController(IAuthService authService)
+    public AuthController(LoginUseCase loginUseCase)
     {
-        _authService = authService;
+        _loginUseCase = loginUseCase;
     }
 
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login(LoginRequestDto loginDto)
     {
-        var response = await _authService.LoginAsync(loginDto);
+        var result = await _loginUseCase.ExecuteAsync(loginDto);
 
-        if (response is null)
+        if (!result.Success)
         {
             return Unauthorized(new
             {
-                Message = "Credenciales incorrectas"
+                Message = result.Error
             });
         }
 
-        return Ok(response);
+        return Ok(result.Value);
     }
 }

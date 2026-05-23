@@ -1,5 +1,5 @@
-﻿using Lab10_AlexandroCano.Application.DTOs.Tickets;
-using Lab10_AlexandroCano.Application.Interfaces.Services;
+using Lab10_AlexandroCano.Application.DTOs.Tickets;
+using Lab10_AlexandroCano.Application.UseCases.Tickets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,17 +10,30 @@ namespace Lab10_AlexandroCano.Api.Controllers;
 [Authorize]
 public class TicketsController : ControllerBase
 {
-    private readonly ITicketService _ticketService;
+    private readonly GetAllTicketsUseCase _getAllTicketsUseCase;
+    private readonly GetTicketByIdUseCase _getTicketByIdUseCase;
+    private readonly CreateTicketUseCase _createTicketUseCase;
+    private readonly UpdateTicketStatusUseCase _updateTicketStatusUseCase;
+    private readonly DeleteTicketUseCase _deleteTicketUseCase;
 
-    public TicketsController(ITicketService ticketService)
+    public TicketsController(
+        GetAllTicketsUseCase getAllTicketsUseCase,
+        GetTicketByIdUseCase getTicketByIdUseCase,
+        CreateTicketUseCase createTicketUseCase,
+        UpdateTicketStatusUseCase updateTicketStatusUseCase,
+        DeleteTicketUseCase deleteTicketUseCase)
     {
-        _ticketService = ticketService;
+        _getAllTicketsUseCase = getAllTicketsUseCase;
+        _getTicketByIdUseCase = getTicketByIdUseCase;
+        _createTicketUseCase = createTicketUseCase;
+        _updateTicketStatusUseCase = updateTicketStatusUseCase;
+        _deleteTicketUseCase = deleteTicketUseCase;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var tickets = await _ticketService.GetAllAsync();
+        var tickets = await _getAllTicketsUseCase.ExecuteAsync();
 
         return Ok(tickets);
     }
@@ -28,7 +41,7 @@ public class TicketsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        var ticket = await _ticketService.GetByIdAsync(id);
+        var ticket = await _getTicketByIdUseCase.ExecuteAsync(id);
 
         if (ticket is null)
         {
@@ -44,7 +57,7 @@ public class TicketsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateTicketDto dto)
     {
-        var ticket = await _ticketService.CreateAsync(dto);
+        var ticket = await _createTicketUseCase.ExecuteAsync(dto);
 
         return Ok(new
         {
@@ -59,7 +72,7 @@ public class TicketsController : ControllerBase
         Guid id,
         UpdateTicketStatusDto dto)
     {
-        var result = await _ticketService.UpdateStatusAsync(id, dto);
+        var result = await _updateTicketStatusUseCase.ExecuteAsync(id, dto);
 
         if (!result.Success)
         {
@@ -80,7 +93,7 @@ public class TicketsController : ControllerBase
         return Ok(new
         {
             Message = "Estado del ticket actualizado correctamente",
-            Ticket = result.Ticket
+            Ticket = result.Value
         });
     }
 
@@ -88,13 +101,13 @@ public class TicketsController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var deleted = await _ticketService.DeleteAsync(id);
+        var result = await _deleteTicketUseCase.ExecuteAsync(id);
 
-        if (!deleted)
+        if (!result.Success)
         {
             return NotFound(new
             {
-                Message = "Ticket no encontrado"
+                Message = result.Error
             });
         }
 

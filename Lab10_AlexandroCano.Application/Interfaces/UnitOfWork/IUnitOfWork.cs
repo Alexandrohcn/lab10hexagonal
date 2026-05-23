@@ -1,7 +1,7 @@
-﻿using Lab10_AlexandroCano.Application.Interfaces.Repositories;
+using Lab10_AlexandroCano.Application.Interfaces.Repositories;
 using Lab10_AlexandroCano.Domain.Entities;
 
-namespace Lab10_AlexandroCano.Application.Interfaces;
+namespace Lab10_AlexandroCano.Application.Interfaces.UnitOfWork;
 
 public interface IUnitOfWork
 {

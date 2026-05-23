@@ -1,101 +1,57 @@
-﻿using Lab10_AlexandroCano.Application.DTOs.Tickets;
-using Lab10_AlexandroCano.Application.Interfaces;
+using Lab10_AlexandroCano.Application.DTOs.Tickets;
 using Lab10_AlexandroCano.Application.Interfaces.Services;
-using Lab10_AlexandroCano.Domain.Constants;
-using Lab10_AlexandroCano.Domain.Entities;
+using Lab10_AlexandroCano.Application.UseCases.Tickets;
 
 namespace Lab10_AlexandroCano.Application.Services;
 
 public class TicketService : ITicketService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly GetAllTicketsUseCase _getAllTicketsUseCase;
+    private readonly GetTicketByIdUseCase _getTicketByIdUseCase;
+    private readonly CreateTicketUseCase _createTicketUseCase;
+    private readonly UpdateTicketStatusUseCase _updateTicketStatusUseCase;
+    private readonly DeleteTicketUseCase _deleteTicketUseCase;
 
-    public TicketService(IUnitOfWork unitOfWork)
+    public TicketService(
+        GetAllTicketsUseCase getAllTicketsUseCase,
+        GetTicketByIdUseCase getTicketByIdUseCase,
+        CreateTicketUseCase createTicketUseCase,
+        UpdateTicketStatusUseCase updateTicketStatusUseCase,
+        DeleteTicketUseCase deleteTicketUseCase)
     {
-        _unitOfWork = unitOfWork;
+        _getAllTicketsUseCase = getAllTicketsUseCase;
+        _getTicketByIdUseCase = getTicketByIdUseCase;
+        _createTicketUseCase = createTicketUseCase;
+        _updateTicketStatusUseCase = updateTicketStatusUseCase;
+        _deleteTicketUseCase = deleteTicketUseCase;
     }
 
     public async Task<IEnumerable<TicketDto>> GetAllAsync()
     {
-        var tickets = await _unitOfWork.Tickets.GetAllAsync();
-        return tickets.Select(MapToDto);
+        return await _getAllTicketsUseCase.ExecuteAsync();
     }
 
     public async Task<TicketDto?> GetByIdAsync(Guid id)
     {
-        var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-        return ticket is null ? null : MapToDto(ticket);
+        return await _getTicketByIdUseCase.ExecuteAsync(id);
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto)
     {
-        var ticket = new Ticket
-        {
-            TicketId = Guid.NewGuid(),
-            UserId = dto.UserId,
-            Title = dto.Title,
-            Description = dto.Description,
-            Status = TicketStatus.Abierto,
-            CreatedAt = DateTime.Now
-        };
-
-        await _unitOfWork.Tickets.AddAsync(ticket);
-        await _unitOfWork.SaveChangesAsync();
-
-        return MapToDto(ticket);
+        return await _createTicketUseCase.ExecuteAsync(dto);
     }
 
     public async Task<(bool Success, string? Error, TicketDto? Ticket)> UpdateStatusAsync(
         Guid id,
         UpdateTicketStatusDto dto)
     {
-        if (!TicketStatus.IsValid(dto.Status))
-        {
-            return (false, "Estado no válido. Use: abierto, en_proceso o cerrado.", null);
-        }
-
-        var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-
-        if (ticket is null)
-        {
-            return (false, "Ticket no encontrado.", null);
-        }
-
-        ticket.Status = dto.Status;
-        ticket.ClosedAt = dto.Status == TicketStatus.Cerrado ? DateTime.Now : null;
-
-        _unitOfWork.Tickets.Update(ticket);
-        await _unitOfWork.SaveChangesAsync();
-
-        return (true, null, MapToDto(ticket));
+        var result = await _updateTicketStatusUseCase.ExecuteAsync(id, dto);
+        return (result.Success, result.Error, result.Value);
     }
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        var ticket = await _unitOfWork.Tickets.GetByIdAsync(id);
-
-        if (ticket is null)
-        {
-            return false;
-        }
-
-        _unitOfWork.Tickets.Delete(ticket);
-        await _unitOfWork.SaveChangesAsync();
-
-        return true;
-    }
-
-    private static TicketDto MapToDto(Ticket ticket)
-    {
-        return new TicketDto
-        {
-            TicketId = ticket.TicketId,
-            UserId = ticket.UserId,
-            Title = ticket.Title,
-            Description = ticket.Description,
-            Status = ticket.Status,
-            CreatedAt = ticket.CreatedAt,
-            ClosedAt = ticket.ClosedAt
-        };
+        var result = await _deleteTicketUseCase.ExecuteAsync(id);
+        return result.Success;
     }
 }

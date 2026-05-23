@@ -1,63 +1,45 @@
-﻿using Lab10_AlexandroCano.Application.DTOs.Responses;
-using Lab10_AlexandroCano.Application.Interfaces;
+using Lab10_AlexandroCano.Application.DTOs.Responses;
 using Lab10_AlexandroCano.Application.Interfaces.Services;
-using Lab10_AlexandroCano.Domain.Entities;
+using Lab10_AlexandroCano.Application.UseCases.Responses;
 
 namespace Lab10_AlexandroCano.Application.Services;
 
 public class ResponseService : IResponseService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly GetAllResponsesUseCase _getAllResponsesUseCase;
+    private readonly GetResponseByIdUseCase _getResponseByIdUseCase;
+    private readonly GetResponsesByTicketUseCase _getResponsesByTicketUseCase;
+    private readonly CreateResponseUseCase _createResponseUseCase;
 
-    public ResponseService(IUnitOfWork unitOfWork)
+    public ResponseService(
+        GetAllResponsesUseCase getAllResponsesUseCase,
+        GetResponseByIdUseCase getResponseByIdUseCase,
+        GetResponsesByTicketUseCase getResponsesByTicketUseCase,
+        CreateResponseUseCase createResponseUseCase)
     {
-        _unitOfWork = unitOfWork;
+        _getAllResponsesUseCase = getAllResponsesUseCase;
+        _getResponseByIdUseCase = getResponseByIdUseCase;
+        _getResponsesByTicketUseCase = getResponsesByTicketUseCase;
+        _createResponseUseCase = createResponseUseCase;
     }
 
     public async Task<IEnumerable<ResponseDto>> GetAllAsync()
     {
-        var responses = await _unitOfWork.Responses.GetAllAsync();
-        return responses.Select(MapToDto);
+        return await _getAllResponsesUseCase.ExecuteAsync();
     }
 
     public async Task<ResponseDto?> GetByIdAsync(Guid id)
     {
-        var response = await _unitOfWork.Responses.GetByIdAsync(id);
-        return response is null ? null : MapToDto(response);
+        return await _getResponseByIdUseCase.ExecuteAsync(id);
     }
 
     public async Task<IEnumerable<ResponseDto>> GetByTicketIdAsync(Guid ticketId)
     {
-        var responses = await _unitOfWork.Responses.GetByTicketIdAsync(ticketId);
-        return responses.Select(MapToDto);
+        return await _getResponsesByTicketUseCase.ExecuteAsync(ticketId);
     }
 
     public async Task<ResponseDto> CreateAsync(CreateResponseDto dto)
     {
-        var response = new Response
-        {
-            ResponseId = Guid.NewGuid(),
-            TicketId = dto.TicketId,
-            ResponderId = dto.ResponderId,
-            Message = dto.Message,
-            CreatedAt = DateTime.Now
-        };
-
-        await _unitOfWork.Responses.AddAsync(response);
-        await _unitOfWork.SaveChangesAsync();
-
-        return MapToDto(response);
-    }
-
-    private static ResponseDto MapToDto(Response response)
-    {
-        return new ResponseDto
-        {
-            ResponseId = response.ResponseId,
-            TicketId = response.TicketId,
-            ResponderId = response.ResponderId,
-            Message = response.Message,
-            CreatedAt = response.CreatedAt
-        };
+        return await _createResponseUseCase.ExecuteAsync(dto);
     }
 }

@@ -10,4 +10,8 @@
       <ProjectReference Include="..\Lab10_AlexandroCano.Domain\Lab10_AlexandroCano.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+    </ItemGroup>
+
 </Project>
